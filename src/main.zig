@@ -87,8 +87,19 @@ pub fn main(init: std.process.Init) !void {
     }
     if (cmd_args.len > 0 and launch_override != null) {
         const sub = cmd_args[0];
-        if (std.mem.eql(u8, sub, "add") or std.mem.eql(u8, sub, "rm") or std.mem.eql(u8, sub, "list"))
+        if (std.mem.eql(u8, sub, "add") or std.mem.eql(u8, sub, "rm") or std.mem.eql(u8, sub, "list") or std.mem.eql(u8, sub, "completions"))
             std.process.fatal("--launch cannot be used with '{s}'", .{sub});
+    }
+
+    if (cmd_args.len > 0 and std.mem.eql(u8, cmd_args[0], "completions")) {
+        if (cmd_args.len != 2 or !std.mem.eql(u8, cmd_args[1], "bash"))
+            std.process.fatal("Usage: dcd completions bash", .{});
+        // NOTE: registered for the name dcd was invoked as, so the `dc` alias gets its own completion
+        const register = try std.fmt.allocPrint(allocator, "\ncomplete -F _dcd {s}\n", .{std.fs.path.basename(args[0])});
+        const stdout = std.Io.File.stdout();
+        try stdout.writeStreamingAll(init.io, @embedFile("completions/dcd.bash"));
+        try stdout.writeStreamingAll(init.io, register);
+        return;
     }
 
     const home = init.environ_map.get("HOME") orelse

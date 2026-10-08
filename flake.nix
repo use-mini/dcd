@@ -27,12 +27,16 @@
               --prefix $out \
               -Doptimize=ReleaseSafe \
               --global-cache-dir $(mktemp -d)
+            mkdir -p $out/share/bash-completion/completions
+            $out/bin/dcd completions bash > $out/share/bash-completion/completions/dcd
           '';
           dontInstall = true;
         };
         dc = pkgs.runCommand "dc" { } ''
           mkdir -p $out/bin
           ln -s ${dcd}/bin/dcd $out/bin/dc
+          mkdir -p $out/share/bash-completion/completions
+          $out/bin/dc completions bash > $out/share/bash-completion/completions/dc
         '';
       in
       {
